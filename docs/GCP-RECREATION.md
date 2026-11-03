@@ -6,68 +6,72 @@ Extension.
 
 ## Overview
 
-The extension uses a "Hybrid" OAuth flow for security:
+The extension uses a hybrid OAuth flow:
 
-1. **Local Client**: Requests authorization from the user.
-2. **Cloud Function**: Acts as a secure proxy to exchange the authorization code
-   for tokens. It holds the `CLIENT_SECRET` securely in Secret Manager.
-3. **Secret Manager**: Stores the OAuth Client Secret.
+1. **Local client:** Requests authorization from the user.
+2. **Cloud Function:** Exchanges the authorization code for tokens. It reads the
+   `CLIENT_SECRET` from Secret Manager.
+3. **Secret Manager:** Stores the OAuth client secret.
 
 ## Prerequisites
 
-- A Google Cloud Project with billing enabled.
-- [Google Cloud CLI (gcloud)](https://cloud.google.com/sdk/docs/install)
+- A Google Cloud project with billing enabled.
+- [Google Cloud CLI (`gcloud`)](https://cloud.google.com/sdk/docs/install),
   installed and authenticated.
-- Node.js and npm installed.
+- Node.js 20 or newer and npm.
+- The repository cloned locally, with its root directory as the working
+  directory when running the commands below.
 
-## Step 1: Run the Automated Setup Script
+## Step 1: Install dependencies and run setup
 
-The setup script handles the full infrastructure setup in the correct order,
-including guided configuration of the OAuth consent screen.
+The setup script uses the repository's `ts-node` dependency to derive OAuth
+scopes from the feature configuration. Install the locked dependencies first:
 
-1. Set your project ID:
-   ```bash
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-2. Run the setup script:
-   ```bash
-   ./scripts/setup-gcp.sh
-   ```
+```bash
+npm ci
+```
+
+Set your Google Cloud project ID:
+
+```bash
+gcloud config set project YOUR_PROJECT_ID
+```
+
+Then run the guided setup script from the repository root:
+
+```bash
+bash scripts/setup-gcp.sh
+```
 
 The script will:
 
-1. Enable all required GCP APIs.
-2. Guide you through configuring the **OAuth consent screen** with the required
-   scopes and test users (opens the Cloud Console automatically).
+1. Enable the required GCP APIs.
+2. Guide you through OAuth consent-screen configuration and show the scopes
+   required by the enabled features.
 3. Deploy the Cloud Function and display its URL.
-4. Prompt you to create an **OAuth 2.0 Client ID** in the Google Cloud Console
-   using the deployed function URL as the redirect URI.
-5. Collect your Client ID and Client Secret.
-6. Store the Client Secret in Secret Manager.
-7. Update the Cloud Function with the OAuth configuration.
-8. Grant the Cloud Function access to the secret.
+4. Prompt you to create an OAuth 2.0 Client ID in Google Cloud Console, using
+   the function URL as the authorized redirect URI.
+5. Store the client secret in Secret Manager, configure the function, and grant
+   it access to the secret.
 
-## Step 2: Local Configuration
+Complete the consent-screen setup and add test users when the app is in Testing
+mode. The script asks you to confirm before continuing.
 
-After running the script, set the following environment variables in your shell
-(e.g., in `.zshrc` or `.bashrc`):
+## Step 2: Local configuration
+
+After setup, set the environment variables in your shell (for example, in
+`.zshrc` or `.bashrc`):
 
 ```bash
 export WORKSPACE_CLIENT_ID="your-client-id"
 export WORKSPACE_CLOUD_FUNCTION_URL="https://your-cloud-function-url"
 ```
 
-The script will display the exact values to use.
-
-Alternatively, you can modify the `DEFAULT_CONFIG` in
+The script prints the values to use. Alternatively, configure the defaults in
 `workspace-server/src/utils/config.ts`.
 
 ## Why a Cloud Function?
 
-The extension uses a Cloud Function to protect your `CLIENT_SECRET`.
-
-- If the `CLIENT_SECRET` were included in the local extension code, anyone with
-  access to the extension could steal it.
-- By using a Cloud Function, the secret stays in your GCP project and is only
-  used server-side during the token exchange.
-- The local client only ever sees the resulting tokens, never the secret.
+The Cloud Function keeps the OAuth client secret in your GCP project rather
+than embedding it in the local extension. The local client receives OAuth
+ tokens but does not receive the client secret.
