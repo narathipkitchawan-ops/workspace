@@ -13,11 +13,16 @@ Google account.
 
 ## Installation
 
-Install the Google Workspace extension by running the following command from
-your terminal:
+To install the canonical extension, run this command in your terminal:
 
 ```bash
 gemini extensions install https://github.com/gemini-cli-extensions/workspace
+```
+
+This repository is a fork. To install this fork instead, use:
+
+```bash
+gemini extensions install https://github.com/narathipkitchawan-ops/workspace
 ```
 
 ## Usage
@@ -28,7 +33,7 @@ Workspace apps. Here are a few examples:
 **Create a new Google Doc:**
 
 > "Create a new Google Doc with the title 'My New Doc' and the content '# My New
-> Document\n\nThis is a new document created from the command line.'"
+> Document\\n\\nThis is a new document created from the command line.'"
 
 **List your upcoming calendar events:**
 
